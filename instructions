@@ -1,0 +1,20 @@
+PART1
+installation : 
+http://debian.grena.ge/debian-cd/9.6.0/amd64/iso-cd/
+attention au dossier d'installation de la VM (~/goinfre)
+suivre les instructions de l'installateur graphique. attribuer 4go de memoie vive pour vitesse d'installation et de boot.
+package : 
+su -
+apt-get update && apt-get upgrade -y
+apt-get install sudo
+apt-get install net-tools
+
+PART2
+su -, apt-get install sudo
+ajouter l'utilisateur au fichier des sudoers avec la commande visudo (https://itx-technologies.com/fr/blog/1554-ajouter-un-utilisateur-root-sur-debian-liste-des-sudoers)
+ip addr, netmask : https://www.aelius.com/njh/subnet_sheet.html
+dossier /etc/ssh/, (https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-ubuntu-1604) !ATTENTION CLEF SSH!
+https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-16-04 !ATTENTION CLEF SSH!
+dos : https://wiki.debian-fr.xyz/Fail2ban
+fail2ban ou ufw pour proteger contre les scans de port
+arreter un service avec systemctl
