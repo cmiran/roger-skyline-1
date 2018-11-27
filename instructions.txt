@@ -1,0 +1,32 @@
+PART1
+-----
+
+INSTALLATION: 
+Get the latest version of you Linux distribution, in my case Debian : https://www.debian.org/releases/stretch/debian-installer/ (if you are working at 42, be careful of where you put your VM, you need to change that parametre in the VirtualBox app : Preference->General->Default Machine Folder->~/goinfre).
+Select your distribution.iso and follow the installation instruction.
+
+PACKAGES: 
+sudo
+net-tools
+
+
+PART2
+-----
+
+CREATE A NO ROOT USER TO CONNECT AND WORK
+Log as root : $ su -
+Install sudo package : $ apt-get install sudo
+Add a new user to the sudoer's list using the command : $ visudo (https://itx-technologies.com/fr/blog/1554-ajouter-un-utilisateur-root-sur-debian-liste-des-sudoers)
+
+CONFIGURE FIX IP ADDRESS WITH NETMASK /30 (man interfaces)
+Find the names of your network interfaces : $ ifconfig -a, or $ ip a, or $ ls /sys/class/net/ (since 2009 a Consistent Network Device Naming convention was adopted for naming Ethernet adapters in Linux, that's why I have enp0s3 instead of eth0).
+Because I have network-manager package installed, I can use the $ nm-connection-editor GUI to configure my network interfaces. The classical method is to edit the /etc/network/interfaces file (https://wiki.debian.org/NetworkConfiguration#Configuring_the_interface_manually), to do that I need to disable or delete network-manager package.
+netmask : https://www.aelius.com/njh/subnet_sheet.html
+https://www.debian.org/doc/manuals/debian-reference/ch05.fr.html#_the_modern_network_configuration_without_gui
+https://memo-linux.com/ip-la-commande-linux-pour-gerer-son-interface-reseau/
+
+dossier /etc/ssh/, (https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-ubuntu-1604) !ATTENTION CLEF SSH!
+https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-16-04 !ATTENTION CLEF SSH!
+dos : https://wiki.debian-fr.xyz/Fail2ban
+fail2ban ou ufw pour proteger contre les scans de port
+arreter un service avec systemd
