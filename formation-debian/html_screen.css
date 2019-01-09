@@ -1,0 +1,101 @@
+/********************************************************************
+ * Style destiné à l'affichage : comme des pages de livres          *
+ ********************************************************************/
+
+body
+{
+ background-color : #ddd ;
+}
+
+.navheader, .navfooter, body > .book, body > .preface, body >.part, body > .chapter, body > .appendix, body > .index, body > .glossary
+{
+ margin-top : 0px ;
+ margin-bottom : 0px ;
+ margin-left : auto ;
+ margin-right : auto ;
+ border-left : 1px solid ;
+ border-right : 2px solid ;
+ max-width : 700px ;
+ min-width : 600px ;
+ padding : 1em 5em 1em 5em ;
+ background-color : white ;
+}
+
+.navheader
+{
+ border-top : 1px solid ;
+ padding-top: 3em ;
+}
+
+.navfooter
+{
+ border-bottom : 2px solid ;
+ padding-bottom : 2em ;
+}
+
+
+
+/********************************************************************
+ * Un joli fond                                                     *
+ ********************************************************************/
+
+body > .book, body > .preface, body >.part, body > .chapter, body > .appendix, body >.index
+{
+ background-image : url("fond.png") ;
+ background-position :  center 5em ;
+ background-repeat : no-repeat ;
+}
+
+body > .book, body > .part
+{
+ background-position :  center 15em ;
+}
+
+
+
+/**********************************************************************
+ * Des détails de mise en forme d'éléments                            *
+ **********************************************************************/
+
+/* Figures et tables                                                */
+.table table
+{
+ background-color : rgba(255, 255, 255, .7) ;
+}
+
+
+/* Notes, astuces, avertissements…                                  */
+
+.note
+{
+ background-color : rgba(255, 255, 255, .7) ;
+}
+.tip
+{
+ background-color : rgba(255, 255, 255, .7) ;
+}
+.warning, .caution
+{
+ background-color : rgba(255, 255, 255, .7) ;
+}
+.important
+{
+ background-color : rgba(255, 255, 255, .7) ;
+}
+
+.author:hover
+{
+ background-color : rgba(215, 7, 81, 0.1) ;
+}
+
+
+/* Le reste                                                         */
+
+a
+{
+ color : #503 ;
+}
+a:visited
+{
+ color : #C24 ;
+}

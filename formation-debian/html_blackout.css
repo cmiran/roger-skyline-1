@@ -1,0 +1,43 @@
+body
+{
+    background-color : black ;
+}
+
+.titlepage h1.title, .chapter > .titlepage h2, .preface > .titlepage h2, .appendix > .titlepage h2, .index > .titlepage h2, .abstract .title
+{
+    background-color : black ;
+    color : white ;
+}
+
+body > .book, body > .preface, body > .part, body > .chapter, body > .appendix, body > .index
+{
+    background-image:url(fond_blackout.png);
+    background-position:center 5em;
+    background-repeat:no-repeat;
+}
+
+.note, .tip, .warning, .caution, .important
+{
+    background-color : #ccc ;
+    background-color : rgba(0, 0, 0, 0.2) ;
+}
+
+a
+{
+ color : black ;
+}
+a:visited
+{
+ color : #666 ;
+}
+
+div#blackout
+{
+ position : fixed ;
+ top : 0 ;
+ left : 0 ;
+}
+div#blackout a img
+{
+ border : none ;
+}

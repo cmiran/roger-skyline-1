@@ -1,0 +1,193 @@
+/********************************************************************
+ * Style commun à tous les systèmes de rendu : impression, affichage…*
+ ********************************************************************/
+
+body
+{
+ font-size : small ;
+}
+
+hr
+{
+ border : none ;
+ border-top : 1px solid ;
+}
+
+body p
+{
+ text-align : justify ;
+}
+
+
+
+/********************************************************************
+ * Des détails de mise en forme d'éléments                          *
+ ********************************************************************/
+
+/* Figures et tables                                                */
+
+.figure, .table, .figure .title, .table .title
+{
+ text-align : center ;
+}
+.table table th, .table table td
+{
+ text-align : left ;
+}
+
+table
+{
+ border-collapse : collapse ;
+}
+
+
+/* Notes, astuces, avertissements…                                  */
+
+.note
+{
+ margin-bottom : .5em ;
+ border : 1px dashed #24C ;
+ padding : .5em ;
+}
+.tip
+{
+ margin-bottom : .5em ;
+ border : 1px dashed #2C4 ;
+ padding : .5em ;
+}
+.warning, .caution
+{
+ margin-bottom : .5em ;
+ border : 1px dashed #C24 ;
+ padding : .5em ;
+}
+.important
+{
+ margin-bottom : .5em ;
+ border : 1px dashed #C52 ;
+ padding : .5em ;
+}
+.note td, .tip h1, .warning td, .caution td, .important td
+{
+ text-align : justify ;
+}
+
+
+/* Des titres                                                       */
+
+.titlepage h1.title
+{
+ background-color : #C24 ; 
+ padding : .5em ;
+ border : 1px solid black ;
+ margin-top : 0em ;
+ text-align: center;
+ font-family : garamond, FreeSerif, serif ;
+ color : white ;
+ font-size : 400% ;
+ font-weight : normal ;
+}
+
+.chapter > .titlepage h2, .preface > .titlepage h2, .appendix > .titlepage h2, .index > .titlepage h2, .partintro h1, .abstract .title
+{
+ text-align : center ;
+ font-size : 250% ;
+ font-family : garamond, FreeSerif, serif ;
+ font-weight : normal ;
+ margin-top : 0em ;
+ margin-bottom : 1em ;
+}
+
+.abstract .title
+{
+ margin-top : 2em ;
+}
+.abstract .title b
+{
+ font-weight : normal ;
+}
+
+.toc dd
+{
+ margin-bottom : .5em ;
+}
+
+
+/* Du code                                                          */
+
+.screen
+{
+ border : 1px dashed #C24 ;
+ padding : 1em ;
+ background-color : #FBE5ED ;
+ background-color : rgba(215, 7, 81, .1) ;
+}
+
+.programlisting
+{
+ border : 1px dashed #24C ;
+ padding : 1em ;
+ background-color : #EDE5FB ;
+ background-color : rgba(81, 7, 215, .1) ;
+}
+
+.optional
+{
+ color : #444 ;
+}
+
+.prompt
+{
+ color : #503 ;
+}
+
+.keycap
+{
+ border : 1px solid #bbd ;
+ padding-left : .1em ;
+ padding-right : .2em ;
+ background-color : #eee ;
+}
+
+.uri:before
+{
+    content : "<" ;
+}
+.uri:after
+{
+    content : ">" ;
+}
+
+
+/* Le reste                                                         */
+
+div.author
+{
+ display : inline-block ;
+ vertical-align : top ;
+ float : left ;
+ width : 15em ;
+ margin-bottom : 1em ;
+ margin-right : 1em ;
+ border : 1px solid rgba(20, 39, 117, 0.2) ;
+ -moz-border-radius : 1em ;
+ padding-left : .5em ;
+ padding-right : .5em ;
+}
+
+h3.author
+{
+ margin-top : 0.5em ;
+ margin-bottom : 0.2em ;
+ font-size : 100%;
+}
+
+p.copyright
+{
+ clear : left ;
+}
+
+acronym
+{
+ font-variant : small-caps ;
+}

@@ -1,0 +1,27 @@
+/********************************************************************
+ * Style destiné à l'impression                                     *
+ ********************************************************************/
+
+/* En-tête et pied de page : inutiles, voire nuisibles              */
+.navheader, .navfooter
+{
+ display : none ;
+}
+
+
+
+/********************************************************************
+ * Des détails de mise en forme d'éléments                          *
+ ********************************************************************/
+
+
+/* Le reste                                                         */
+
+a
+{
+ color : inherit ;
+}
+a:visited
+{
+ color : inherit ;
+}
