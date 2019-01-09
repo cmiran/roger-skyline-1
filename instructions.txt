@@ -1,7 +1,7 @@
-PART1
------
+PART1-----------------------------------------------------------------------
 
 INSTALLATION: 
+
 Get the latest version of you Linux distribution, in my case Debian : https://www.debian.org/releases/stretch/debian-installer/
 (if you are working at 42, be careful of where you put your VM, you need to
 change that parametre in the VirtualBox app : 
@@ -14,10 +14,10 @@ sudo
 openssh-server
 
 
-PART2
------
+PART2-----------------------------------------------------------------------
 
 CREATE A NO ROOT USER TO CONNECT AND WORK AND MAKE IT SUDOER
+
 Log as root : $ su -
 Update packages list : $ apt-get update
 Install sudo package : $ apt-get install sudo
@@ -28,37 +28,57 @@ using the command : $ visudo (https://itx-technologies.com/fr/blog/1554-ajouter-
 Or use the following command $ usermod -aG sudo $USER to add a user to the
 sudoer's group
 
+
 CONFIGURE FIX IP ADDRESS WITH NETMASK /30 (man interfaces)
+
 Find the names of your network interfaces :
 $ ifconfig -a (need net-tools package), or $ ip a, or $ ls /sys/class/net/
 (since 2009 a Consistent Network Device Naming convention was adopted for
 naming Ethernet adapters in Linux, that's why maybe you have enp0s3
 instead of eth0)
+
 If you have network-manager package installed, you can use the :
 $ nm-connection-editor GUI to configure my network interfaces
 Another way is to edit the /etc/network/interfaces file
 (https://wiki.debian.org/NetworkConfiguration#Configuring_the_interface_manually)
 to do that you need to disable or delete network-manager package
+
 The 'modern' way is to create a dhcp.network and a static.network in
 /etc/systemd/network (https://www.debian.org/doc/manuals/debian-reference/ch05.fr.html#_the_modern_network_configuration_without_gui).
 Last, but not least, way to configure my network is by using
 $ ip address commands (https://memo-linux.com/ip-la-commande-linux-pour-gerer-son-interface-reseau/)
+
 Remove and flush all IP v4 addresses on all the Ethernet interfaces :
 $ ip -4 address flush label "enp*"
+
 Restart the network for my changes to be effective :
 $ sudo service networking restart (/etc/init.d/networking)
+
 Then : $ ifup enp0s3
-Here is a cheat sheet for netmasks :
+
+Cool links :
+https://chrtophe.developpez.com/tutoriels/gestion-reseau-machine-virtuelle/
+https://www.faistesbalises.net/os/16/tuto-installer-debian-sous-virtualbox-en-s-affranchissant-des-additions-invite.html
+https://formation-debian.viarezo.fr/ip.html
+http://jodies.de/ipcalc
 https://www.aelius.com/njh/subnet_sheet.html
 
+
 CHANGE DEFAULT SSH PORT, SSH ACCESS BY PUBLICKEYS, ROOT MUST CAN'T SSH
-https://wiki.debian.org/fr/SSH
+
 Dossier /etc/ssh/, (https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-debian-9) !ATTENTION CLEF SSH!
+
+Cool links :
+https://wiki.debian.org/fr/SSH
+
 
 https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-16-04 !ATTENTION CLEF SSH!
 
+
 dos : https://wiki.debian-fr.xyz/Fail2ban
 
+
 fail2ban ou ufw pour proteger contre les scans de port
+
 
 arreter un service avec systemd
