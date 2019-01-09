@@ -2,16 +2,18 @@ PART1-----------------------------------------------------------------------
 
 INSTALLATION: 
 
-Get the latest version of you Linux distribution, in my case Debian : https://www.debian.org/releases/stretch/debian-installer/
+Get the latest version of you Linux distribution, in my case Debian :
+https://www.debian.org/releases/stretch/debian-installer/
 (if you are working at 42, be careful of where you put your VM, you need to
 change that parametre in the VirtualBox app : 
 Preference->General->Default Machine Folder->~/goinfre)
 
-PACKAGES:
-(to list all installed : 
-$ sudo dpkg-query --list / $ sudo service --status-all)
-sudo
-openssh-server
+# PACKAGES:
+# (to list all installed : 
+# $ sudo dpkg-query --list / $ sudo service --status-all)
+# sudo
+# net-tools
+# openssh-server
 
 
 PART2-----------------------------------------------------------------------
@@ -23,38 +25,41 @@ Update packages list : $ apt-get update
 Install sudo package : $ apt-get install sudo
 If the user have not been created during the installation :
 $ adduser $USERID (dev) $GROUPID (sudo)
-If the user has been creted during installation, add it to the sudoer's list
-using the command : $ visudo (https://itx-technologies.com/fr/blog/1554-ajouter-un-utilisateur-root-sur-debian-liste-des-sudoers)
-Or use the following command $ usermod -aG sudo $USER to add a user to the
-sudoer's group
+If the user has been created during installation : 
+$ usermod -aG sudo $USER, or $ visudo
 
 
-CONFIGURE FIX IP ADDRESS WITH NETMASK /30 (man interfaces)
+CONFIGURE STATIC IP ADDRESS WITH NETMASK /30 (man interfaces)
 
-Find the names of your network interfaces :
-$ ifconfig -a (need net-tools package), or $ ip a, or $ ls /sys/class/net/
+Turn on your VM and find the names of your network interfaces :
+$ ip a, or $ ifconfig -a (need net-tools package), or $ ls /sys/class/net/
 (since 2009 a Consistent Network Device Naming convention was adopted for
 naming Ethernet adapters in Linux, that's why maybe you have enp0s3
-instead of eth0)
+instead of eth0), for easy setup get the ip and the
+gateway assigned by dhcp protocol ($ ip a, $ route)
 
-If you have network-manager package installed, you can use the :
-$ nm-connection-editor GUI to configure my network interfaces
-Another way is to edit the /etc/network/interfaces file
+Edit /etc/network/interfaces to setup static ip preferences
 (https://wiki.debian.org/NetworkConfiguration#Configuring_the_interface_manually)
-to do that you need to disable or delete network-manager package
 
-The 'modern' way is to create a dhcp.network and a static.network in
-/etc/systemd/network (https://www.debian.org/doc/manuals/debian-reference/ch05.fr.html#_the_modern_network_configuration_without_gui).
-Last, but not least, way to configure my network is by using
-$ ip address commands (https://memo-linux.com/ip-la-commande-linux-pour-gerer-son-interface-reseau/)
+# If you have network-manager package installed, you can use the :
+# $ nm-connection-editor GUI to configure your network interfaces
+# to do that you need to disable or delete network-manager package
+# The 'modern' way is to create a dhcp.network and a static.network in
+# /etc/systemd/network (https://www.debian.org/doc/manuals/debian-reference/ch05.fr.html#_the_modern_network_configuration_without_gui).
+# Last, but not least, way to configure your network is by using
+# $ ip address commands (https://memo-linux.com/ip-la-commande-linux-pour-gerer-son-interface-reseau/)
 
-Remove and flush all IP v4 addresses on all the Ethernet interfaces :
-$ ip -4 address flush label "enp*"
+Shutdown your VM :
+$ poweroff
+On the VitualBox GUI go to your VM Preferences, select Network, select
+Adaptater 1, switch to Bridge Adaptator then select en0
 
-Restart the network for my changes to be effective :
-$ sudo service networking restart (/etc/init.d/networking)
-
-Then : $ ifup enp0s3
+# Remove all IP v4 addresses on all the Ethernet interfaces :
+# $ ip -4 address flush label "enp*"
+# Restart the network for your changes to be effective :
+# $ sudo service networking restart (/etc/init.d/networking)
+# Activate enp0s3 network
+# $ ifup enp0s3
 
 Cool links :
 https://chrtophe.developpez.com/tutoriels/gestion-reseau-machine-virtuelle/
@@ -66,11 +71,15 @@ https://www.aelius.com/njh/subnet_sheet.html
 
 CHANGE DEFAULT SSH PORT, SSH ACCESS BY PUBLICKEYS, ROOT MUST CAN'T SSH
 
-Dossier /etc/ssh/, (https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-debian-9) !ATTENTION CLEF SSH!
+Copy your rsa_publickey using $ ssh-copy-id user@guestmachine
+(https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-debian-9)
+Edit /etc/ssh/sshd_config to setup your preferences (UsePAM no...etc)
 
 Cool links :
 https://wiki.debian.org/fr/SSH
 
+
+FIREWALL
 
 https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-16-04 !ATTENTION CLEF SSH!
 
