@@ -7,6 +7,8 @@ https://www.debian.org/releases/stretch/debian-installer/
 (if you are working at 42, be careful of where you put your VM, you need to
 change that parametre in the VirtualBox app : 
 Preference->General->Default Machine Folder->~/goinfre)
+Make a VHD of 8.6 GO to have a vm of 8.0 GO, and a separated /home partition, it
+will automaticaly set around 4.2 GO but you can edit that later with cfdisk later.
 
 # PACKAGES:
 # (to list all installed : 
@@ -14,6 +16,12 @@ Preference->General->Default Machine Folder->~/goinfre)
 # sudo
 # net-tools
 # openssh-server
+# ufw
+# fail2ban
+# git (to download slowloris)
+# perl (required by slowloris)
+# libwww-mechanize-shell-perl (required by slowloris)
+# perl-doc (to read the slowloris's man)
 
 
 PART2-----------------------------------------------------------------------
@@ -71,9 +79,17 @@ https://www.aelius.com/njh/subnet_sheet.html
 
 CHANGE DEFAULT SSH PORT, SSH ACCESS BY PUBLICKEYS, ROOT MUST CAN'T SSH
 
+Install : $ apt-get install openssh-server, packageif not already installed
+Check if active : $ service ssh status
 Copy your rsa_publickey using $ ssh-copy-id user@guestmachine
 (https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-debian-9)
-Edit /etc/ssh/sshd_config to setup your preferences (UsePAM no...etc)
+Edit /etc/ssh/sshd_config to setup your preferences : 
+Port 2222
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication no
+reboot ssh : $ service ssh restart
+On the host machine log in : $ ssh@10.11.12.0 -p 2222
 
 Cool links :
 https://wiki.debian.org/fr/SSH
@@ -81,10 +97,41 @@ https://wiki.debian.org/fr/SSH
 
 FIREWALL
 
-https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-16-04 !ATTENTION CLEF SSH!
+Install ufw (Uncomplicated Firewall) : $ apt-get install ufw
+Allow port 2222 (ssh) : $ ufw allow 2222
+Allow port 80 (http) : $ ufw allow 80
+Allow port 443 (https) : $ ufw allow 443
 
+Cool links :
+https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-16-04
+https://debian-facile.org/doc:systeme:ufw
 
-dos : https://wiki.debian-fr.xyz/Fail2ban
+DDoS
+
+Install : $apt-get install fail2ban
+Check your iptables rules : $ sudo iptables -S | grep f2b, by default port 22 is 
+watched for ssh, you need to change that by editing
+/etc/fail2ban/jail.d/defaults-debian.conf
+/*
+[DEFAULT]
+destemail = cmiran@student.42.fr
+
+[sshd]
+enabled = true
+port = 2222
+
+[sshd-ddos]
+enabled = true
+port = 2222
+*/
+To list all jails : $ fail2ban-client status
+
+Test that with slowloris (https://github.com/llaera/slowloris.pl)
+
+Cool link :
+https://wiki.debian-fr.xyz/Fail2ban
+? https://gist.github.com/SamStudio8/92507ad3e317edb9b869c20bb2623fcf ?
+? https://javapipe.com/blog/iptables-ddos-protection/ ?
 
 
 fail2ban ou ufw pour proteger contre les scans de port
