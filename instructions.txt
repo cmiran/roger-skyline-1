@@ -8,19 +8,24 @@ https://www.debian.org/releases/stretch/debian-installer/
 change that parameter in the VirtualBox app : 
 Preference->General->Default Machine Folder->~/goinfre)
 
-During the installation's partitioning part, choose /home separate, select 
-your main sda, then configure as wishes (https://wiki.debian-fr.xyz/Le_partitionnement)
-1 part for OS, 1 part for /home (do not forget 4.2 request), 1 part for swap
-(Create new partition with what is left -> Use for -> ("swap"))
+During the installation's partitioning part, select Manual, your main sda,
+then configure as wishes (https://wiki.debian-fr.xyz/Le_partitionnement)
+Do not forget 4.2 request ! 1 part for / (OS), 1 part for /home, 1 part
+for swap (Use for -> ("swap"))
 
 # PACKAGES:
-# (to list all installed : 
-# $ sudo dpkg-query --list / $ sudo service --status-all)
+# to list all installed : $ sudo dpkg-query --list
+# to deinstall a package : $ apt-get remove pckg-name,
+# $ apt-get --purge remove pckg-name
+# to list all active service : $ sudo service --status-all
 # sudo
 # net-tools
 # openssh-server
 # ufw
 # fail2ban
+# mailutils
+
+# PACKAGES FOR SLOWLORIS TEST VM
 # git (to download slowloris)
 # perl (required by slowloris)
 # libwww-mechanize-shell-perl (required by slowloris)
@@ -73,15 +78,14 @@ gateway $ netstat -nr | grep default (on host)
 Shutdown your VM : $ poweroff
 On the VitualBox GUI go to your VM Preferences, select Network, select
 Adaptater 1, switch to Bridge Adaptator then select en0
-
 Turn on VM
-Remove all IP v4 addresses on all the Ethernet interfaces :
-$ ip -4 address flush label "enp*"
-Restart the network for your changes to be effective :
-$ sudo service networking restart (/etc/init.d/networking)
 
-# Activate enp0s3 network : $ ifup enp0s3 (to deny that switch allow-hotplug to
-# auto in /etc/network/interfaces)
+# Remove all IP v4 addresses on all the Ethernet interfaces :
+# $ ip -4 address flush label "enp*"
+# Restart the network for your changes to be effective :
+# $ sudo service networking restart (/etc/init.d/networking)
+# Activate enp0s3 network : $ ifup enp0s3 
+# (to deny that switch allow-hotplug to auto in /etc/network/interfaces)
 
 Cool links :
 https://chrtophe.developpez.com/tutoriels/gestion-reseau-machine-virtuelle/
@@ -92,29 +96,34 @@ https://www.faistesbalises.net/os/16/tuto-installer-debian-sous-virtualbox-en-s-
 
 On guest (VM)
 Install : $ apt-get install openssh-server, package if not already installed
+Edit /etc/ssh/sshd_config :
+/*
+PassAuthentification yes
+*/
+Reboot ssh : $ service ssh restart
 Check if active : $ service ssh status
+
+On host
+Copy your ~/.ssh/rsa_publickey using $ ssh-copy-id user@guestmachine
+(https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-debian-9)
+
+On guest (VM)
 Edit /etc/ssh/sshd_config : 
 /*
 Port 2222
 ...
 PermitRootLogin no
 ...
-*/
-reboot ssh : $ service ssh restart
-
-On host
-Copy your ~/.ssh/rsa_publickey using $ ssh-copy-id user@guestmachine
-(https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-debian-9)
-$ ssh@10.11.12.0 -p 2222
-Edit /etc/ssh/sshd_config : 
-/*
 PubkeyAuthentication yes
 ...
 PasswordAuthentication no
 */
+Reboot ssh : $ service ssh restart
 
 # Delog : $ exit
 # Check to log as root : $ ssh -p 2222 root@guestip
+# ssh -T git@github.com
+# ssh-keygen -R ip
 
 Cool links :
 https://wiki.debian.org/fr/SSH
@@ -124,10 +133,13 @@ https://wiki.debian.org/fr/SSH
 
 Install ufw (Uncomplicated Firewall) : $ apt-get install ufw -y
 Enable ufw : $ ufw enable
-Allow port 2222 (ssh) : $ ufw allow 2222
-Allow port 80 (http) : $ ufw allow 80
-Allow port 443 (https) : $ ufw allow 443
-List all rules : $ ufw status
+Allow port 2222 (ssh) : $ ufw limit 2222
+Allow port 80 (http) : $ ufw limit 80
+Allow port 443 (https) : $ ufw limit 443
+(Use "limit" instead of "allow" will enable protection againt DDoS attacks)
+# List all rules : $ ufw status
+
+# to list all services/ports : $ cat /etc/services
 
 Cool links :
 https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-16-04
@@ -137,32 +149,138 @@ https://debian-facile.org/doc:systeme:ufw
 5. DDoS
 
 Install : $ apt-get install fail2ban -y
-Check your iptables rules : $ sudo iptables ($ apt-get installnet-tools) -S | grep f2b (by default port 22 is 
-watched for ssh, you need to change that by editing
-/etc/fail2ban/jail.d/defaults-debian.conf)
+Check your iptables rules : $ sudo iptables -S | grep INPUT, f2b, ufw, port-scanning 
+(by default port 22 is watched for ssh, you need to change that
+by editing /etc/fail2ban/jail.d/defaults-debian.conf)
+! https://www.digitalocean.com/community/tutorials/how-to-protect-an-nginx-server-with-fail2ban-on-ubuntu-14-04 !
+! https://snippets.aktagon.com/snippets/554-how-to-secure-an-nginx-server-with-fail2ban !
 /*
 [DEFAULT]
-destemail = cmiran@student.42.fr
+destemail = csarmiran@gmail.com
 
 [sshd]
 enabled = true
+filter = sshd
 port = 2222
 
 [sshd-ddos]
 enabled = true
 port = 2222
+
+[nginx-http-auth]
+enabled = true
+filter = nginx-http-auth
+logpath  = /var/log/nginx/error.log
+
+[nginx-noscript]
+enabled = true
+port = http,https
+filter = nginx-noscript
+logpath = /var/log/nginx/access.log
+maxretry = 6
+
+[nginx-badbots]
+enabled = true
+port = http,https
+filter = nginx-badbots
+logpath = /var/log/nginx/access.log
+maxretry = 2
+
+[nginx-nohome]
+enabled = true
+port = http,https
+filter = nginx-nohome
+logpath = /var/log/nginx/access.log
+maxretry = 2
+
+[nginx-noproxy]
+enabled = true
+port = http,https
+filter = nginx-noproxy
+logpath = /var/log/nginx/access.log
+maxretry = 2
 */
 To list all jails : $ fail2ban-client status
 
-Test that with slowloris (https://github.com/llaera/slowloris.pl)
-Create new VM (go to 0.1 but skip partition part
+# Protection against ssh brute-force protection with iptables (--dport $YOUR_SSH_PORT)
+# /sbin/iptables -A INPUT -p tcp --dport 2222 -m conntrack --ctstate NEW -m recent --set 
+# /sbin/iptables -A INPUT -p tcp --dport 2222 -m conntrack --ctstate NEW -m recent --update --seconds 60 --hitcount 10 -j DROP
+
+Test that with slowloris (https://github.com/llaera/slowloris.pl) on a new VM
 Cool link :
 https://wiki.debian-fr.xyz/Fail2ban
 ? https://gist.github.com/SamStudio8/92507ad3e317edb9b869c20bb2623fcf ?
 ? https://javapipe.com/blog/iptables-ddos-protection/ ?
 
 
-fail2ban ou ufw pour proteger contre les scans de port
+PROTECTION AGAINST PORTS SCANNING
+
+### Protection against port scanning ###
+/sbin/iptables -N port-scanning
+/sbin/iptables -A port-scanning -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s --limit-burst 2 -j RETURN
+/sbin/iptables -A port-scanning -j DROP
 
 
-arreter un service avec systemd
+STOP NO USED SERVICES
+
+To list all active services/ports : $ netstat -lntup
+
+
+CREATE A SCRIPT THAT UPDATE PCKGS
+
+/*
+#!/bin/sh
+
+# https://awc.com.my/uploadnew/5ffbd639c5e6eccea359cb1453a02bed_Setting%20Up%20Cron%20Job%20Using%20crontab.pdf
+# sudo su
+
+if [ ! /var/log/update_script.log ]
+then
+	sudo touch /var/log/update_script.log
+fi
+
+echo "#!/bin/sh
+
+sudo apt-get update && apt-get -y upgrade >> /var/log/update_script.log" > /etc/cron.weekly/pckgs_update_script.sh
+chmod 755 /etc/cron.weekly/pckgs_update_scripts.sh
+
+# Edit $ crontab -e
+# 0 4 * * * /etc/cron.weekly/pckgs_update_script.sh
+# @reboot /etc/cron.weekly/pckgs_update_script.sh
+*/
+
+
+CREATE A SCRIPT THAT WATCH /etc/crontab AND SEND A MAIL IF MODIFIED
+/*
+#!/bin/bash
+
+# sudo su
+# apt-get install mailutils
+
+if [ !/root/checksum_file ]
+then
+	md5sum /etc/crontab > /root/checksum_file
+fi
+
+echo "#md5sum -c /root/checksum_file
+#!/bin/sh
+
+MD5SUM='cat /root/checksum_file'
+MD5NEW='md5sum /etc/crontab'
+
+if [ "$MD5SUM" != "$MD5NEW" ]
+then
+	echo "/etc/crontab has been modified.." | mail -s "alert" root
+fi" > /etc/cron.daily/watch_crontab_script.sh
+chmod 755 /etc/cron.daily/watch_crontab_script.sh
+
+# Edit $ crontab -e
+# crontab -e 0 0 * * * /etc/cron.daily/watch_crontab_script.sh
+*/
+
+
+PART 3 ______________________________________________________________________
+
+NGINX
+
+! https://blog.nicolargo.com/2011/01/installation-et-test-de-nginx-sous-ubuntu.html !
