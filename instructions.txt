@@ -1,14 +1,17 @@
-PART1-----------------------------------------------------------------------
+PART 1 ______________________________________________________________________
 
-INSTALLATION: 
+0. INSTALL: 
 
 Get the latest version of you Linux distribution, in my case Debian :
 https://www.debian.org/releases/stretch/debian-installer/
 (if you are working at 42, be careful of where you put your VM, you need to
-change that parametre in the VirtualBox app : 
+change that parameter in the VirtualBox app : 
 Preference->General->Default Machine Folder->~/goinfre)
-Make a VHD of 8.6 GO to have a vm of 8.0 GO, and a separated /home partition, it
-will automaticaly set around 4.2 GO but you can edit that later with cfdisk later.
+
+During the installation's partitioning part, choose /home separate, select 
+your main sda, then configure as wishes (https://wiki.debian-fr.xyz/Le_partitionnement)
+1 part for OS, 1 part for /home (do not forget 4.2 request), 1 part for swap
+(Create new partition with what is left -> Use for -> ("swap"))
 
 # PACKAGES:
 # (to list all installed : 
@@ -21,97 +24,122 @@ will automaticaly set around 4.2 GO but you can edit that later with cfdisk late
 # git (to download slowloris)
 # perl (required by slowloris)
 # libwww-mechanize-shell-perl (required by slowloris)
-# perl-doc (to read the slowloris's man)
+# perl-doc (to read : $ man slowloris)
 
 
-PART2-----------------------------------------------------------------------
+PART 2 ______________________________________________________________________
 
-CREATE A NO ROOT USER TO CONNECT AND WORK AND MAKE IT SUDOER
+1. CREATE USER & MAKE IT SUDOER
 
 Log as root : $ su -
 Update packages list : $ apt-get update
 Install sudo package : $ apt-get install sudo
+$ usermod -aG sudo $USER, or $ visudo ($ man visudo)
 If the user have not been created during the installation :
-$ adduser $USERID (dev) $GROUPID (sudo)
-If the user has been created during installation : 
-$ usermod -aG sudo $USER, or $ visudo
+$ adduser $USERID $GROUPID (sudo)
 
 
-CONFIGURE STATIC IP ADDRESS WITH NETMASK /30 (man interfaces)
+2. CONFIGURE STATIC IP ADDRESS WITH NETMASK /30 (man interfaces)
 
-Turn on your VM and find the names of your network interfaces :
+On host
+Find your ip with : $ ifconfig, choose one that match with netmask /30
+(https://www.aelius.com/njh/subnet_sheet.html)
+Find your gateway with : $ netstat -nr | grep default
+
+On guest
+Find the names of your networks interfaces :
 $ ip a, or $ ifconfig -a (need net-tools package), or $ ls /sys/class/net/
 (since 2009 a Consistent Network Device Naming convention was adopted for
 naming Ethernet adapters in Linux, that's why maybe you have enp0s3
-instead of eth0), for easy setup get the ip and the
-gateway assigned by dhcp protocol ($ ip a, $ route)
+instead of eth0) 
 
 Edit /etc/network/interfaces to setup static ip preferences
+/*
+# The primary network intefaces
+auto enp0s3
+iface enp0s3 inet static
+address x.x.x.whatevabutnotgateway,nothostip,notHostMinMax/30 (http://jodies.de/ipcalc)
+gateway $ netstat -nr | grep default (on host)
+*/
 (https://wiki.debian.org/NetworkConfiguration#Configuring_the_interface_manually)
 
 # If you have network-manager package installed, you can use the :
 # $ nm-connection-editor GUI to configure your network interfaces
-# to do that you need to disable or delete network-manager package
 # The 'modern' way is to create a dhcp.network and a static.network in
 # /etc/systemd/network (https://www.debian.org/doc/manuals/debian-reference/ch05.fr.html#_the_modern_network_configuration_without_gui).
 # Last, but not least, way to configure your network is by using
 # $ ip address commands (https://memo-linux.com/ip-la-commande-linux-pour-gerer-son-interface-reseau/)
 
-Shutdown your VM :
-$ poweroff
+Shutdown your VM : $ poweroff
 On the VitualBox GUI go to your VM Preferences, select Network, select
 Adaptater 1, switch to Bridge Adaptator then select en0
 
-# Remove all IP v4 addresses on all the Ethernet interfaces :
-# $ ip -4 address flush label "enp*"
-# Restart the network for your changes to be effective :
-# $ sudo service networking restart (/etc/init.d/networking)
-# Activate enp0s3 network
-# $ ifup enp0s3
+Turn on VM
+Remove all IP v4 addresses on all the Ethernet interfaces :
+$ ip -4 address flush label "enp*"
+Restart the network for your changes to be effective :
+$ sudo service networking restart (/etc/init.d/networking)
+
+# Activate enp0s3 network : $ ifup enp0s3 (to deny that switch allow-hotplug to
+# auto in /etc/network/interfaces)
 
 Cool links :
 https://chrtophe.developpez.com/tutoriels/gestion-reseau-machine-virtuelle/
 https://www.faistesbalises.net/os/16/tuto-installer-debian-sous-virtualbox-en-s-affranchissant-des-additions-invite.html
-https://formation-debian.viarezo.fr/ip.html
-http://jodies.de/ipcalc
-https://www.aelius.com/njh/subnet_sheet.html
 
 
-CHANGE DEFAULT SSH PORT, SSH ACCESS BY PUBLICKEYS, ROOT MUST CAN'T SSH
+3. CHANGE DEFAULT SSH PORT, SSH ACCESS BY PUBLICKEYS, ROOT CANNOT SSH
 
-Install : $ apt-get install openssh-server, packageif not already installed
+On guest (VM)
+Install : $ apt-get install openssh-server, package if not already installed
 Check if active : $ service ssh status
-Copy your rsa_publickey using $ ssh-copy-id user@guestmachine
-(https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-debian-9)
-Edit /etc/ssh/sshd_config to setup your preferences : 
+Edit /etc/ssh/sshd_config : 
+/*
 Port 2222
+...
 PermitRootLogin no
-PubkeyAuthentication yes
-PasswordAuthentication no
+...
+*/
 reboot ssh : $ service ssh restart
-On the host machine log in : $ ssh@10.11.12.0 -p 2222
+
+On host
+Copy your ~/.ssh/rsa_publickey using $ ssh-copy-id user@guestmachine
+(https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-debian-9)
+$ ssh@10.11.12.0 -p 2222
+Edit /etc/ssh/sshd_config : 
+/*
+PubkeyAuthentication yes
+...
+PasswordAuthentication no
+*/
+
+# Delog : $ exit
+# Check to log as root : $ ssh -p 2222 root@guestip
 
 Cool links :
 https://wiki.debian.org/fr/SSH
 
 
-FIREWALL
+4. FIREWALL
 
-Install ufw (Uncomplicated Firewall) : $ apt-get install ufw
+Install ufw (Uncomplicated Firewall) : $ apt-get install ufw -y
+Enable ufw : $ ufw enable
 Allow port 2222 (ssh) : $ ufw allow 2222
 Allow port 80 (http) : $ ufw allow 80
 Allow port 443 (https) : $ ufw allow 443
+List all rules : $ ufw status
 
 Cool links :
 https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-16-04
 https://debian-facile.org/doc:systeme:ufw
 
-DDoS
 
-Install : $apt-get install fail2ban
-Check your iptables rules : $ sudo iptables -S | grep f2b, by default port 22 is 
+5. DDoS
+
+Install : $ apt-get install fail2ban -y
+Check your iptables rules : $ sudo iptables ($ apt-get installnet-tools) -S | grep f2b (by default port 22 is 
 watched for ssh, you need to change that by editing
-/etc/fail2ban/jail.d/defaults-debian.conf
+/etc/fail2ban/jail.d/defaults-debian.conf)
 /*
 [DEFAULT]
 destemail = cmiran@student.42.fr
@@ -127,7 +155,7 @@ port = 2222
 To list all jails : $ fail2ban-client status
 
 Test that with slowloris (https://github.com/llaera/slowloris.pl)
-
+Create new VM (go to 0.1 but skip partition part
 Cool link :
 https://wiki.debian-fr.xyz/Fail2ban
 ? https://gist.github.com/SamStudio8/92507ad3e317edb9b869c20bb2623fcf ?
