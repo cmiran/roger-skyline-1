@@ -12,6 +12,7 @@ During the installation's partitioning part, select Manual, your main sda,
 then configure as wishes (https://wiki.debian-fr.xyz/Le_partitionnement)
 Do not forget 4.2 request ! 1 part for / (OS), 1 part for /home, 1 part
 for swap (Use for -> ("swap"))
+# To list your partitions : $ cfdisk, fdisk -l, df -h, mount
 
 # PACKAGES:
 # to list all installed : $ sudo dpkg-query --list
@@ -24,12 +25,14 @@ for swap (Use for -> ("swap"))
 # ufw
 # fail2ban
 # mailutils
+# apache2-utils
 
 # PACKAGES FOR SLOWLORIS TEST VM
 # git (to download slowloris)
 # perl (required by slowloris)
 # libwww-mechanize-shell-perl (required by slowloris)
 # perl-doc (to read : $ man slowloris)
+
 
 
 PART 2 ______________________________________________________________________
@@ -100,8 +103,9 @@ Edit /etc/ssh/sshd_config :
 /*
 PassAuthentification yes
 */
-Reboot ssh : $ service ssh restart
-Check if active : $ service ssh status
+Reload ssh : $ service ssh reload
+# Check if active : $ service ssh status
+# If not : $ service ssh start
 
 On host
 Copy your ~/.ssh/rsa_publickey using $ ssh-copy-id user@guestmachine
@@ -118,10 +122,10 @@ PubkeyAuthentication yes
 ...
 PasswordAuthentication no
 */
-Reboot ssh : $ service ssh restart
-
+Reload ssh : $ service ssh reload
 # Delog : $ exit
 # Check to log as root : $ ssh -p 2222 root@guestip
+
 # ssh -T git@github.com
 # ssh-keygen -R ip
 
@@ -149,11 +153,7 @@ https://debian-facile.org/doc:systeme:ufw
 5. DDoS
 
 Install : $ apt-get install fail2ban -y
-Check your iptables rules : $ sudo iptables -S | grep INPUT, f2b, ufw, port-scanning 
-(by default port 22 is watched for ssh, you need to change that
-by editing /etc/fail2ban/jail.d/defaults-debian.conf)
-! https://www.digitalocean.com/community/tutorials/how-to-protect-an-nginx-server-with-fail2ban-on-ubuntu-14-04 !
-! https://snippets.aktagon.com/snippets/554-how-to-secure-an-nginx-server-with-fail2ban !
+Edit : $ sudo vi /etc/fail2ban/jail.d/defaults-debian.conf
 /*
 [DEFAULT]
 destemail = csarmiran@gmail.com
@@ -200,39 +200,83 @@ filter = nginx-noproxy
 logpath = /var/log/nginx/access.log
 maxretry = 2
 */
-To list all jails : $ fail2ban-client status
 
-# Protection against ssh brute-force protection with iptables (--dport $YOUR_SSH_PORT)
-# /sbin/iptables -A INPUT -p tcp --dport 2222 -m conntrack --ctstate NEW -m recent --set 
-# /sbin/iptables -A INPUT -p tcp --dport 2222 -m conntrack --ctstate NEW -m recent --update --seconds 60 --hitcount 10 -j DROP
+Edit : $ sudo vi /etc/fail2ban/filter.d/nginx-http-auth.conf
+/*
+[Definition]
+
+failregex = ^ \[error\] \d+#\d+: \*\d+ user "\S+":? (password mismatch|was not found in ".*"), client: <HOST>, server: \S+, request: "\S+ \S+ HTTP/\d+\.\d+", host: "\S+"\s*$
+            ^ \[error\] \d+#\d+: \*\d+ no user/password was provided for basic authentication, client: <HOST>, server: \S+, request: "\S+ \S+ HTTP/\d+\.\d+", host: "\S+"\s*$
+
+ignoreregex =
+*/
+
+Add : $ sudo cp apache-badbots.conf nginx-badbots.conf
+
+Add : $ sudo vi /etc/fail2ban/filter.d/nginx-noscript.conf
+/*
+[Definition]
+
+failregex = ^<HOST> -.*GET.*(\.php|\.asp|\.exe|\.pl|\.cgi|\.scgi)
+
+ignoreregex =
+*/
+
+Add : $ sudo vi /etc/fail2ban/filter.d/nginx-nohome.conf
+/*
+[Definition]
+
+failregex = ^<HOST> -.*GET .*/~.*
+
+ignoreregex =
+*/
+
+Add : $ sudo vi /etc/fail2ban/filter.d/nginx-noproxy.conf
+/*
+[Definition]
+
+failregex = ^<HOST> -.*GET http.*
+
+ignoreregex =
+*/
+
+Reload f2b : $ sudo service fail2ban reload
+# To list all jails : $ fail2ban-client status
+
+# Protection against ssh brute-force protection with iptables (--dport $YOUR_SSH_PORT) :
+# $ /sbin/iptables -A INPUT -p tcp --dport 2222 -m conntrack --ctstate NEW -m recent --set 
+# $ /sbin/iptables -A INPUT -p tcp --dport 2222 -m conntrack --ctstate NEW -m recent --update --seconds 60 --hitcount 10 -j DROP
+
+# Check your iptables rules : $ sudo iptables -S | grep INPUT, f2b, ufw, port-scanning 
 
 Test that with slowloris (https://github.com/llaera/slowloris.pl) on a new VM
+
 Cool link :
+https://www.digitalocean.com/community/tutorials/how-to-protect-an-nginx-server-with-fail2ban-on-ubuntu-14-04
+https://snippets.aktagon.com/snippets/554-how-to-secure-an-nginx-server-with-fail2ban
 https://wiki.debian-fr.xyz/Fail2ban
-? https://gist.github.com/SamStudio8/92507ad3e317edb9b869c20bb2623fcf ?
-? https://javapipe.com/blog/iptables-ddos-protection/ ?
+https://javapipe.com/blog/iptables-ddos-protection/
 
 
 PROTECTION AGAINST PORTS SCANNING
 
-### Protection against port scanning ###
-/sbin/iptables -N port-scanning
-/sbin/iptables -A port-scanning -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s --limit-burst 2 -j RETURN
-/sbin/iptables -A port-scanning -j DROP
+Protection against port scanning :
+$ /sbin/iptables -N port-scanning
+$ /sbin/iptables -A port-scanning -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s --limit-burst 2 -j RETURN
+$ /sbin/iptables -A port-scanning -j DROP
 
 
-STOP NO USED SERVICES
+STOP UNUSED SERVICES
 
-To list all active services/ports : $ netstat -lntup
+To list all activer services : $ sudo service --status-all
+To list all active services/ports : $ sudo netstat -lntup
 
 
 CREATE A SCRIPT THAT UPDATE PCKGS
 
+As root : $ vi /root/script1.sh
 /*
 #!/bin/sh
-
-# https://awc.com.my/uploadnew/5ffbd639c5e6eccea359cb1453a02bed_Setting%20Up%20Cron%20Job%20Using%20crontab.pdf
-# sudo su
 
 if [ ! /var/log/update_script.log ]
 then
@@ -243,30 +287,32 @@ echo "#!/bin/sh
 
 sudo apt-get update && apt-get -y upgrade >> /var/log/update_script.log" > /etc/cron.weekly/pckgs_update_script.sh
 chmod 755 /etc/cron.weekly/pckgs_update_scripts.sh
+*/
 
-# Edit $ crontab -e
-# 0 4 * * * /etc/cron.weekly/pckgs_update_script.sh
-# @reboot /etc/cron.weekly/pckgs_update_script.sh
+Then edit crontab : 
+$ crontab -e
+/*
+...
+0 4 * * * /etc/cron.weekly/pckgs_update_script.sh
+@reboot /etc/cron.weekly/pckgs_update_script.sh
 */
 
 
 CREATE A SCRIPT THAT WATCH /etc/crontab AND SEND A MAIL IF MODIFIED
 
+Install : $ sudo apt-get install mailutils
+As root : $ vi /root/script2.sh
 /*
 #!/bin/bash
 
-# sudo su
-# apt-get install mailutils
-
-if [ !/root/checksum_file ]
+if [ !/root/crontab-md5sum ]
 then
-	md5sum /etc/crontab > /root/checksum_file
+	md5sum /etc/crontab > /root/crontab-md5sum
 fi
 
-echo "#md5sum -c /root/checksum_file
-#!/bin/sh
+echo "#!/bin/sh
 
-MD5SUM='cat /root/checksum_file'
+MD5SUM='cat /root/crontab-md5sum'
 MD5NEW='md5sum /etc/crontab'
 
 if [ "$MD5SUM" != "$MD5NEW" ]
@@ -274,15 +320,147 @@ then
 	echo "/etc/crontab has been modified.." | mail -s "alert" root
 fi" > /etc/cron.daily/watch_crontab_script.sh
 chmod 755 /etc/cron.daily/watch_crontab_script.sh
-
-# Edit $ crontab -e
-# crontab -e 0 0 * * * /etc/cron.daily/watch_crontab_script.sh
 */
+
+Then edit : $ crontab -e
+# crontab -e 0 0 * * * /etc/cron.daily/watch_crontab_script.sh
+
 
 
 PART 3 ______________________________________________________________________
 
-NGINX
+NGINX, INSTALLATION
 
-! https://blog.nicolargo.com/2011/01/installation-et-test-de-nginx-sous-ubuntu.html !
-! https://www.digitalocean.com/community/tutorials/how-to-set-up-http-authentication-with-nginx-on-ubuntu-12-10 !
+Install : $ sudo apt-get install nginx
+Active test cfg : $ sudo service nginx configtest
+Start server : $ sudo service nginx start
+Test to access to your server via a browser (port 80 must be open : $ sudo ufw limit 80)
+Stop server : $ sudo service nginx stop
+
+Create your website folder : $ mkdir /home/user/dream-website/www
+Edit a test page : $ vi /home/user/dream-website/www/index.html
+/*
+<html><body>DREAM DEALER</body></html>
+*/
+
+Create a cfg file for your website : $ sudo vi /etc/nginx/sites-available/dream-website
+/*
+# dream-website
+
+server {
+	listen 80;
+
+	root /home/user/dream-website/www;
+	index index.html index.htm;
+
+	server_name localhost;
+
+	location / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to index.html
+		try_files $uri $uri/ /index.html;
+	}
+}
+*/
+
+Delete : $ sudo rm /etc/nginx/site-enabled/default
+Active yours : $ su; $ cd /etc/nginx/sites-enable; $ ln -s /etc/nginx/site-enabled/dream-website
+Start nginx : $ sudo service nginx start
+
+
+NGINX, LOGIN PAGE
+
+Get : $ sudo apt-get install apache2-utils
+Creat user and password : $ sudo htpasswd -c /etc/nginx/.htpasswd user
+Update dream-website cfg : $ sudo vi /etc/nginx/sites-available/dream-website
+(add this after "index  index.html index.htm;")
+/*
+auth_basic "Restricted";
+auth_basic_user_file /etc/nginx/.htpasswd;
+*/
+Reload : $ sudo /etc/init.d/nginx reload
+
+
+NGINX, SSL CERTIFICATE
+
+Create a self-signed key and certificate pair with OpenSSL :
+$ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
+! Common Name MUST BE YOUR IP !
+Create a strong Diffie-Hellman group, which is used in negotiating
+Perfect Forward Secrecy with clients :
+$ sudo openssl dhparam -out /etc/nginx/dhparam.pem 4096
+Create a configuration snippet pointing to the SSL key and certificate :
+$ sudo vi /etc/nginx/snippets/self-signed.conf 
+/*
+ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
+ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+*/
+Create a configuration snippet with strong encryption settings :
+$ sudo vi /etc/nginx/snippets/ssl-params.conf
+/*
+ssl_protocols TLSv1.2;
+ssl_prefer_server_ciphers on;
+ssl_dhparam /etc/nginx/dhparam.pem;
+ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+ssl_ecdh_curve secp384r1; # Requires nginx >= 1.1.0
+ssl_session_timeout  10m;
+ssl_session_cache shared:SSL:10m;
+ssl_session_tickets off; # Requires nginx >= 1.5.9
+ssl_stapling on; # Requires nginx >= 1.3.7
+ssl_stapling_verify on; # Requires nginx => 1.3.7
+resolver 8.8.8.8 8.8.4.4 valid=300s;
+resolver_timeout 5s;
+# Disable strict transport security for now. You can uncomment the following
+# line if you understand the implications.
+# add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload";
+add_header X-Frame-Options DENY;
+add_header X-Content-Type-Options nosniff;
+add_header X-XSS-Protection "1; mode=block";
+*/
+Edit website cfg file : $ sudo vi /etc/nginx/sites-available/dream-website
+/*
+# dream-website
+
+server {
+	listen 443 ssl;
+	listen [::]:443 ssl;
+	include snippets/self-signed.conf;
+	include snippets/ssl-params.conf;
+	
+	root /home/user/dream-website/www;
+	index index.html index.htm;
+
+	# For Authentication
+	auth_basic "Restricted";
+	auth_basic_user_file /etc/nginx/.htpasswd;
+
+	server_name localhost;
+
+	location / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to index.html
+		try_files $uri $uri/ /index.html;
+	}
+}
+
+server {
+	listen 80;
+	listen [::]:80;
+
+	server_name localhost;
+
+	return 301 https://$server_name$request_uri;
+}
+*/
+Adjust Firewall : $ sudo ufw status
+($ sudo ufw app list, to see available profils)
+$ sudo ufw delete limit 80,443
+$ sudo ufw limit 'Nginx Full'
+
+Check cfg for syntax error : $ sudo nginx -t
+Restart : $ sudo service nginx restart
+
+Cool links :
+https://blog.nicolargo.com/2011/01/installation-et-test-de-nginx-sous-ubuntu.html
+https://www.digitalocean.com/community/tutorials/how-to-set-up-http-authentication-with-nginx-on-ubuntu-12-10
+https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-in-ubuntu-18-04
