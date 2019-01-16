@@ -251,6 +251,7 @@ chmod 755 /etc/cron.weekly/pckgs_update_scripts.sh
 
 
 CREATE A SCRIPT THAT WATCH /etc/crontab AND SEND A MAIL IF MODIFIED
+
 /*
 #!/bin/bash
 
@@ -284,3 +285,4 @@ PART 3 ______________________________________________________________________
 NGINX
 
 ! https://blog.nicolargo.com/2011/01/installation-et-test-de-nginx-sous-ubuntu.html !
+! https://www.digitalocean.com/community/tutorials/how-to-set-up-http-authentication-with-nginx-on-ubuntu-12-10 !
