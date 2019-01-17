@@ -6,7 +6,7 @@ Get the latest version of you Linux distribution, in my case Debian :
 https://www.debian.org/releases/stretch/debian-installer/
 (if you are working at 42, be careful of where you put your VM, you need to
 change that parameter in the VirtualBox app : 
-Preference->General->Default Machine Folder->~/goinfre)
+Preference->General->Default Machine Folder->/sgoinfre/goinfre/Perso/$USER)
 
 During the installation's partitioning part, select Manual, your main sda,
 then configure as wishes (https://wiki.debian-fr.xyz/Le_partitionnement)
